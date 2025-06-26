@@ -138,7 +138,15 @@ class AudioBotGUI:
         self.worker_thread = threading.Thread(target=self._monitor_loop, daemon=True)
         self.worker_thread.start()
 
+        # Perform initial cast
+        initial_cast_thread = threading.Thread(target=self._perform_initial_cast, daemon=True)
+        initial_cast_thread.start()
+
     def stop_worker(self):
+        # Add a guard to prevent re-entry
+        if not self.is_running:
+            return
+
         self.is_running = False
         self.start_button.config(state=tk.NORMAL)
         self.stop_button.config(state=tk.DISABLED)
@@ -148,6 +156,24 @@ class AudioBotGUI:
     def get_vk_code(self, key_str):
         key_str = key_str.lower()
         return VK_CODE_MAP.get(key_str)
+
+    def _perform_initial_cast(self):
+        self.log_message("启动后立即执行抛竿...")
+        # Give a moment for the user to switch to the game window
+        time.sleep(0.5)
+        hwnd = find_wow_hwnd()
+        if hwnd:
+            cast_rod_vk = self.get_vk_code(self.cast_rod_key_var.get())
+            if cast_rod_vk:
+                post_key(hwnd, cast_rod_vk)
+                self.last_trigger_time = time.time()
+                self.log_message("初始抛竿完成。")
+            else:
+                self.log_message(f"错误：无效的抛竿按键 '{self.cast_rod_key_var.get()}'")
+        else:
+            self.log_message("未找到 wow.exe 窗口，初始抛竿失败。")
+        # In any case, reset the timer to start the timeout countdown
+        self.last_trigger_time = time.time()
 
     def _audio_callback(self, indata, frames, time_info, status):
         if not self.is_running or self.is_acting:

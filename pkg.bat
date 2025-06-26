@@ -1,0 +1,1 @@
+pyinstaller --noconfirm --windowed --upx-dir "C:\Users\txt_c\AppData\Local\Microsoft\WinGet\Packages\UPX.UPX_Microsoft.Winget.Source_8wekyb3d8bbwe\upx-5.0.1-win64" autox_audio_key.py
